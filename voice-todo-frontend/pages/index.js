@@ -12,7 +12,7 @@ export default function HomePage() {
   const [sort, setSort] = useState("");
 
   // Fetch with sorting support
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000").replace(/\/$/, '');
   const fetchTasks = async (searchQuery = "", sortQuery = "") => {
     setLoading(true);
     setError("");

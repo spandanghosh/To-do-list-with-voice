@@ -8,7 +8,7 @@ export default function VoiceCommand({ onSuccess }) {
   const [response, setResponse] = useState(null);
   const { transcript, listening, resetTranscript } = useSpeechRecognition();
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000").replace(/\/$/, '');
 
   const handleSend = async () => {
     setIsSending(true);
