@@ -5,6 +5,8 @@ import requests
 import os
 import re
 import dateparser
+import re
+import string
 
 app = FastAPI()
 app.add_middleware(
@@ -45,17 +47,27 @@ def speech_to_text(audio_bytes):
     return result["results"]["channels"][0]["alternatives"][0]["transcript"]
 
 def find_title(text: str) -> str:
-    # Attempt to extract task title using common speech patterns
+    # Remove action keywords from start
+    text = text.lower()
+    for action in ["delete", "add", "create", "make", "show"]:
+        if text.startswith(action):
+            text = text[len(action):].strip()
+    # Remove 'task', 'the', etc.
+    text = re.sub(r"^(task|the|a)\s*", "", text)
+    # Pattern match as before
     patterns = [
-        r"(?:task to do|work on|about) (.+)",  # e.g. "task to do buy milk"
-        r"(?:create|make|add|set up|put) (?:a )?task (?:for )?(?:to )?(.*)",  # e.g. "make a task buy milk"
+        r"(?:task to do|work on|about) (.+)",
+        r"(?:create|make|add|set up|put) (?:a )?task (?:for )?(?:to )?(.*)",
     ]
     for pattern in patterns:
-        match = re.search(pattern, text.lower())
+        match = re.search(pattern, text)
         if match:
-            return match.group(1).strip()
-    # fallback: return whole text
-    return text.strip()
+            # Remove trailing punctuation and whitespace
+            title = match.group(1).strip().rstrip(string.punctuation + " ").strip()
+            return title
+    # fallback: remove trailing punctuation and whitespace
+    title = text.strip().rstrip(string.punctuation + " ").strip()
+    return title
 
 def find_date(text: str):
     date = dateparser.parse(text, settings={"PREFER_DATES_FROM": "future"})
@@ -128,6 +140,14 @@ async def voice_command(audio: UploadFile):
     command = parse_command(transcript)
     result = handle_task_command(command)
     return {"transcript": transcript, "result": result}
+
+@app.post("/voice-command/text")
+async def voice_command_text(cmd: dict):
+    """Alternative endpoint for text-based commands"""
+    command_text = cmd.get("command", "")
+    command = parse_command(command_text)
+    result = handle_task_command(command)
+    return {"transcript": command_text, "result": result}
 
 @app.get("/tasks")
 def get_tasks():

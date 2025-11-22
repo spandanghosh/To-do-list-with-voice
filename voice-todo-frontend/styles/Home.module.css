@@ -1,0 +1,35 @@
+.main {
+  max-width: 500px;
+  margin: 40px auto;
+  background: #eef2ff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px #eff6;
+  padding: 32px;
+}
+
+.title {
+  font-size: 2.4rem;
+  color: #3730a3;
+  font-weight: bold;
+}
+
+.button {
+  margin: 12px 6px;
+  padding: 8px 16px;
+  border-radius: 7px;
+  border: none;
+  background-color: #6366f1;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s;
+}
+
+.button:disabled {
+  background-color: #c7d2fe;
+}
+
+.tasksList {
+  font-size: 1.18rem;
+  margin-left: 24px;
+}
