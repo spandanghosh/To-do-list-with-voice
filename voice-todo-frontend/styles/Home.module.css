@@ -1,35 +1,108 @@
 .main {
-  max-width: 500px;
-  margin: 40px auto;
-  background: #eef2ff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px #eff6;
-  padding: 32px;
+  max-width: 700px;
+  margin: 48px auto;
+  background: linear-gradient(120deg, #eef2ff 70%, #e0e7ff 100%);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(80, 80, 185, 0.10), 0 1.5px 8px #b6c3e0;
+  padding: 38px 36px 36px 36px;
 }
 
 .title {
-  font-size: 2.4rem;
+  font-size: 2.7rem;
   color: #3730a3;
-  font-weight: bold;
+  font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .button {
   margin: 12px 6px;
-  padding: 8px 16px;
-  border-radius: 7px;
+  padding: 10px 20px;
+  border-radius: 8px;
   border: none;
-  background-color: #6366f1;
-  color: white;
+  background: linear-gradient(90deg, #6366f1 85%, #a5b4fc 100%);
+  color: #fff;
   font-weight: 600;
+  font-size: 1.04rem;
+  box-shadow: 0 1px 8px rgba(100,100,150,0.09);
   cursor: pointer;
-  transition: background .18s;
+  transition: background 0.15s, box-shadow 0.12s;
+}
+
+.button:hover {
+  background: linear-gradient(90deg, #4338ca 90%, #818cf8 100%);
+  box-shadow: 0 2px 16px #8091fc45;
+  color: #f1f5fa;
 }
 
 .button:disabled {
-  background-color: #c7d2fe;
+  background-color: #eaedfa;
+  color: #b3bbd8;
 }
 
 .tasksList {
-  font-size: 1.18rem;
-  margin-left: 24px;
+  font-size: 1.06rem;
+}
+
+/* Table styling */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.2em;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f8fafc;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.th {
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 1.08rem;
+  padding: 10px 10px 10px 7px;
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 2px solid #c7d2fe;
+}
+.td {
+  padding: 11px 10px 11px 7px;
+  border-bottom: 1px solid #e0e7ff;
+  font-size: 1.03rem;
+}
+.tr:last-child .td {
+  border-bottom: none;
+}
+.td span {
+  border-radius: 9px;
+  padding: 2px 13px;
+  font-weight: 600;
+}
+.tr:hover .td {
+  background: #ede9fe;
+  color: #312e81;
+}
+
+/* Input styling */
+.input {
+  font-size: 1.04rem;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 7px 11px;
+  background: #f8fafc;
+  box-shadow: 0 1px 4px #e0e7ffd9;
+  outline: none;
+  margin-right: 8px;
+  transition: border 0.17s;
+}
+.input:focus {
+  border: 2px solid #6366f1;
+  background: #eef2ff;
+}
+
+.status {
+  font-weight: 650;
+  color: #e11d48;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
 }
