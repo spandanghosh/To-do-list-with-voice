@@ -91,6 +91,8 @@ def clean_title(raw_title):
     title = re.sub(r"\s*(for|at|on|to)\s*$", "", title, flags=re.IGNORECASE)
     # Collapse whitespace and strip punctuation
     title = re.sub(r"\s+", " ", title).strip(".!?, ")
+    # Remove trailing priority phrases from title
+    title = re.sub(r"\s*(priority\s*[1-3]|high priority|medium priority|low priority|urgent|important|minor|top)\s*$", "", title, flags=re.IGNORECASE)
     return title.capitalize()
 
 def extract_entities(text):
@@ -191,6 +193,9 @@ def parse_command(text, total_tasks=None, use_llm=True):
     extracted = extract_entities(text)
     print("DEBUG extracted:", extracted)
 
+    # Clean extracted title before use
+    extracted['title'] = clean_title(extracted['title'])
+
     # Fill missing fields from fallback extraction
     if not command or 'action' not in command or command['action'] is None:
         if re.search(r"(show|display)", text_l):
@@ -199,14 +204,14 @@ def parse_command(text, total_tasks=None, use_llm=True):
             command = {"action": "delete", "index": extracted['index']}
         elif re.search(r"delete|remove|get rid of", text_l) and extracted['title']:
             command = {"action": "delete", "title": extracted['title']}
+        elif re.search(r"(update|set|change|modify|adjust)", text_l) and extracted['title'] and extracted['priority'] is not None:
+            command = {"action": "update_priority", "title": extracted['title'], "priority": extracted['priority']}
         elif re.search(r"(make|add|create|work on|task to do|put)", text_l) and extracted['title']:
             command = {"action": "create", "title": extracted['title'], "scheduled": extracted['scheduled'], "priority": extracted['priority']}
         elif re.search(r"(push|schedule|move|update|reschedule|change)", text_l) and extracted['title'] and extracted['scheduled']:
             command = {"action": "update_scheduled", "title": extracted['title'], "scheduled": extracted['scheduled']}
         elif re.search(r"(push|schedule|move|update|reschedule|change)", text_l) and extracted['index'] is not None and extracted['scheduled']:
             command = {"action": "update_scheduled_index", "index": extracted['index'], "scheduled": extracted['scheduled']}
-        elif ("priority" in text_l or "prio" in text_l or "index" in text_l) and extracted['title'] and extracted['priority'] is not None:
-            command = {"action": "update_priority", "title": extracted['title'], "priority": extracted['priority']}
         elif ("priority" in text_l or "prio" in text_l or "index" in text_l) and extracted['index'] is not None and extracted['priority'] is not None:
             command = {"action": "update_priority_index", "index": extracted['index'], "priority": extracted['priority']}
         else:
@@ -214,7 +219,7 @@ def parse_command(text, total_tasks=None, use_llm=True):
     else:
         # LLM worked--merge missing entities from fallback
         if not command.get('title'):
-            command['title'] = extracted['title']
+            command['title'] = clean_title(extracted['title'])
         if not command.get('scheduled'):
             command['scheduled'] = extracted['scheduled']
         if command.get('priority') is None:
@@ -226,7 +231,6 @@ def parse_command(text, total_tasks=None, use_llm=True):
 
     print("Parsed command (with extracted entities):", command)
     return command
-
 
 def handle_task_command(command: dict):
     action = command.get("action")
