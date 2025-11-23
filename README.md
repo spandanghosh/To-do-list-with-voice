@@ -1,8 +1,3 @@
-Here is a **fully professional, production-grade README** based on your content — rewritten in a polished, open-source–ready format with clear sections, improved flow, and a clean structure.
-No diagrams included as requested.
-
----
-
 # Conversational Voice Task Manager
 
 A voice-first, AI-powered task manager enabling natural, conversational control over your to-do list.
