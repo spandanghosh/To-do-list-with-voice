@@ -5,6 +5,7 @@ import requests
 import os
 import re
 import dateparser
+from dateparser.search import search_dates
 from datetime import datetime
 import json
 
@@ -38,6 +39,9 @@ init_db()
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HF_MODEL_ID = "microsoft/phi-2"
+
+def format_title(title):
+    return title.strip().capitalize() if title else ""
 
 def speech_to_text(audio_bytes):
     response = requests.post(
@@ -77,36 +81,51 @@ def extract_priority(text: str):
         return 1
     return None
 
-def find_title(text: str):
-    text = text.lower()
-    # Remove priority
-    text = re.sub(r"priority\s*\d+", "", text)
-    # Remove date/time words
-    text = re.sub(r"\b(on|for|by|at|tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{4}-\d{2}-\d{2})\b", "", text)
-    # Remove "task"
-    text = re.sub(r"\btask\b", "", text)
-    # Remove double spaces, leading/trailing spaces
-    text = re.sub(r"\s+", " ", text).strip()
-    for action in ["delete", "add", "create", "make", "show", "push", "schedule", "move", "update", "work on"]:
-        if text.startswith(action):
-            text = text[len(action):].strip()
-    text = re.sub(r"^(the|a|about)\s+", "", text)
-    patterns = [
-        r"(?:task to do|work on|about|to do|named) (.+?)(?:$|\s| with| for| at| by| on)",
-        r"(?:create|make|add|set up|put) (?:a )?task (?:for )?(.*?)(?:$|\s| with| for| at| by| on)",
-        r"(?:delete|remove) (?:the )?task (?:about|named)? (.+?)(?:$|\s| with| for| at| by| on)",
-        r"(?:update|push|move|schedule) (?:the )?task (?:about|named)? (.+?)(?:$|\s| to| at| by| on)",
-        r"(?:show|display) (?:me )?(?:all )?(.+?)(?:$|\s| tasks| task)",
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            return match.group(1).strip().rstrip(".!?, ")
-    return text.strip().rstrip(".!?, ")
+def clean_title(raw_title):
+    title = raw_title or ""
+    # Remove leading action verbs
+    title = re.sub(r"^(add|create|make|put|work on|task to do|set up|schedule|show|delete|remove|update|push|move|reschedule|change)\s+", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"^(the\s+)?task(\s+to\s+do)?(\s+for)?\s*", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"^(the|a|an|about)\s+", "", title, flags=re.IGNORECASE)
+    # Remove trailing connecting words and whitespace
+    title = re.sub(r"\s*(for|at|on|to)\s*$", "", title, flags=re.IGNORECASE)
+    # Collapse whitespace and strip punctuation
+    title = re.sub(r"\s+", " ", title).strip(".!?, ")
+    return title.capitalize()
 
-def find_date(text: str):
-    date = dateparser.parse(text, settings={"PREFER_DATES_FROM": "future"})
-    return date.isoformat() if date else None
+def extract_entities(text):
+    title_clean = text
+    results = search_dates(text, settings={"PREFER_DATES_FROM": "future"})
+    scheduled = None
+    title = clean_title(title_clean)
+    if results:
+        for date_str, date_obj in results:
+            if date_obj:
+                scheduled = date_obj.isoformat()
+                title_clean = re.sub(re.escape(date_str), '', title_clean, flags=re.IGNORECASE).strip()
+
+    # Remove leading action verbs and command phrases
+    title_clean = re.sub(
+        r"^(add|create|make|put|work on|task to do|set up|schedule|show|delete|remove|update|push|move|reschedule|change)\s+", "", 
+        title_clean, flags=re.IGNORECASE
+    )
+    # Remove phrases like 'the task for', 'task for', 'for', 'about', 'to do'
+    title_clean = re.sub(r"^(the\s+)?task(\s+to\s+do)?(\s+for)?\s*", "", title_clean, flags=re.IGNORECASE)
+    title_clean = re.sub(r"^(the|a|an|about)\s+", "", title_clean, flags=re.IGNORECASE)
+    # Remove trailing 'for', 'about', and extra spaces
+    title_clean = re.sub(r"\s+(for|about)\s*$", "", title_clean, flags=re.IGNORECASE)
+    title_clean = re.sub(r"\s+", " ", title_clean).strip(".!?, ")
+
+    priority = extract_priority(title_clean)
+    index = extract_index(title_clean)
+    title = title_clean
+
+    return {
+        "title": title,
+        "scheduled": scheduled,
+        "priority": priority,
+        "index": index,
+    }
 
 def find_sort(text: str):
     if "priority" in text.lower():
@@ -145,12 +164,13 @@ def query_llm(text, model_id=HF_MODEL_ID, max_new_tokens=128):
         return None
 
 def parse_command(text, total_tasks=None, use_llm=True):
-    # First, try LLM intent extraction
+    command = None
+
+    # LLM parsing
     if use_llm and HF_TOKEN:
         raw = query_llm(text)
         if raw:
             try:
-                # If output contains fenced code block, extract JSON inside
                 if "```" in raw:
                     code_chunks = raw.split("```")
                     json_candidate = ""
@@ -158,46 +178,55 @@ def parse_command(text, total_tasks=None, use_llm=True):
                         if "{" in chunk:
                             json_candidate = chunk[chunk.find("{"):]
                             break
-                    command = json.loads(json_candidate)
+                    if json_candidate.strip():
+                        command = json.loads(json_candidate)
+                    else:
+                        raise ValueError("No JSON in fenced block")
                 else:
                     command = json.loads(raw)
-                return command
             except Exception as e:
                 print("LLM could not parse JSON, falling back. Output was:", raw)
 
-    # Fallback: regex
     text_l = text.lower()
-    index = extract_index(text_l, total=total_tasks)
-    priority = extract_priority(text_l)
-    scheduled = find_date(text_l)
-    title = find_title(text_l)
-    sort_by = find_sort(text_l)
+    extracted = extract_entities(text)
+    print("DEBUG extracted:", extracted)
 
-    if re.search(r"(show|display)", text_l):
-        return {"action": "show", "title": title if title else None, "sort": sort_by}
+    # Fill missing fields from fallback extraction
+    if not command or 'action' not in command or command['action'] is None:
+        if re.search(r"(show|display)", text_l):
+            command = {"action": "show", "title": extracted['title'] if extracted['title'] else None, "sort": find_sort(text_l)}
+        elif re.search(r"delete|remove", text_l) and extracted['index'] is not None:
+            command = {"action": "delete", "index": extracted['index']}
+        elif re.search(r"delete|remove|get rid of", text_l) and extracted['title']:
+            command = {"action": "delete", "title": extracted['title']}
+        elif re.search(r"(make|add|create|work on|task to do|put)", text_l) and extracted['title']:
+            command = {"action": "create", "title": extracted['title'], "scheduled": extracted['scheduled'], "priority": extracted['priority']}
+        elif re.search(r"(push|schedule|move|update|reschedule|change)", text_l) and extracted['title'] and extracted['scheduled']:
+            command = {"action": "update_scheduled", "title": extracted['title'], "scheduled": extracted['scheduled']}
+        elif re.search(r"(push|schedule|move|update|reschedule|change)", text_l) and extracted['index'] is not None and extracted['scheduled']:
+            command = {"action": "update_scheduled_index", "index": extracted['index'], "scheduled": extracted['scheduled']}
+        elif ("priority" in text_l or "prio" in text_l or "index" in text_l) and extracted['title'] and extracted['priority'] is not None:
+            command = {"action": "update_priority", "title": extracted['title'], "priority": extracted['priority']}
+        elif ("priority" in text_l or "prio" in text_l or "index" in text_l) and extracted['index'] is not None and extracted['priority'] is not None:
+            command = {"action": "update_priority_index", "index": extracted['index'], "priority": extracted['priority']}
+        else:
+            command = {"action": None}
+    else:
+        # LLM worked--merge missing entities from fallback
+        if not command.get('title'):
+            command['title'] = extracted['title']
+        if not command.get('scheduled'):
+            command['scheduled'] = extracted['scheduled']
+        if command.get('priority') is None:
+            command['priority'] = extracted['priority']
+        if command.get('index') is None:
+            command['index'] = extracted['index']
+        if 'sort' not in command:
+            command['sort'] = find_sort(text_l)
 
-    if re.search(r"delete|remove", text_l) and index is not None:
-        return {"action": "delete", "index": index}
+    print("Parsed command (with extracted entities):", command)
+    return command
 
-    elif re.search(r"delete|remove|get rid of", text_l) and title:
-        return {"action": "delete", "title": title}
-
-    elif re.search(r"(make|add|create|work on|task to do|put)", text_l) and title:
-        return {"action": "create", "title": title, "scheduled": scheduled, "priority": priority}
-
-    elif re.search(r"(push|schedule|move|update|reschedule|change)", text_l) and title and scheduled:
-        return {"action": "update_scheduled", "title": title, "scheduled": scheduled}
-
-    elif re.search(r"(push|schedule|move|update|reschedule|change)", text_l) and index is not None and scheduled:
-        return {"action": "update_scheduled_index", "index": index, "scheduled": scheduled}
-
-    elif ("priority" in text_l or "prio" in text_l or "index" in text_l) and title and priority is not None:
-        return {"action": "update_priority", "title": title, "priority": priority}
-
-    elif ("priority" in text_l or "prio" in text_l or "index" in text_l) and index is not None and priority is not None:
-        return {"action": "update_priority_index", "index": index, "priority": priority}
-
-    return {"action": None}
 
 def handle_task_command(command: dict):
     action = command.get("action")
@@ -222,18 +251,20 @@ def handle_task_command(command: dict):
         conn.close()
         return result
     if action == "create" and title:
+        formatted = format_title(title)
         cursor.execute(
             "INSERT INTO tasks (title, scheduled, priority, created, updated) VALUES (?, ?, ?, ?, ?)",
-            (title, scheduled, priority, now, now),
+            (formatted, scheduled, priority, now, now),
         )
         conn.commit()
-        result = {"status": "Task created.", "title": title, "scheduled": scheduled, "priority": priority, "created": now}
+        result = {"status": "Task created.", "title": formatted, "scheduled": scheduled, "priority": priority, "created": now}
     elif action == "show":
         rows = cursor.execute("SELECT * FROM tasks").fetchall()
         if title:
+            formatted = format_title(title)
             filtered = [
                 {"id": r[0], "title": r[1], "scheduled": r[2], "priority": r[3], "created": r[4], "updated": r[5]}
-                for r in rows if title in r[1].lower()
+                for r in rows if formatted in r[1].lower()
             ]
         else:
             filtered = [
@@ -246,23 +277,25 @@ def handle_task_command(command: dict):
             filtered.sort(key=lambda t: t["scheduled"] if t["scheduled"] else "")
         result = filtered
     elif action == "delete" and title:
-        cursor.execute("DELETE FROM tasks WHERE title LIKE ?", (f"%{title}%",))
+        formatted = format_title(title)
+        cursor.execute("DELETE FROM tasks WHERE title LIKE ?", (f"%{formatted}%",))
         conn.commit()
         affected = cursor.rowcount
         if affected > 0:
-            result = {"status": f"Deleted {affected} task(s) matching '{title}'."}
+            result = {"status": f"Deleted {affected} task(s) matching '{formatted}'."}
         else:
-            result = {"status": f"No tasks matched '{title}'."}
+            result = {"status": f"No tasks matched '{formatted}'."}
     elif action == "update_scheduled" and title and scheduled:
+        formatted = format_title(title)
         cursor.execute(
-            "UPDATE tasks SET scheduled=?, updated=? WHERE title LIKE ?", (scheduled, now, f"%{title}%")
+            "UPDATE tasks SET scheduled=?, updated=? WHERE title LIKE ?", (scheduled, now, f"%{formatted}%")
         )
         conn.commit()
         affected = cursor.rowcount
         if affected > 0:
-            result = {"status": f"Task(s) matching '{title}' scheduled for {scheduled}.", "updated": now}
+            result = {"status": f"Task(s) matching '{formatted}' scheduled for {scheduled}.", "updated": now}
         else:
-            result = {"status": f"No tasks matched '{title}' to reschedule."}
+            result = {"status": f"No tasks matched '{formatted}' to reschedule."}
     elif action == "update_scheduled_index" and index is not None and scheduled:
         rows = cursor.execute("SELECT id FROM tasks ORDER BY id").fetchall()
         if 1 <= index <= len(rows):
@@ -276,15 +309,16 @@ def handle_task_command(command: dict):
         conn.close()
         return result
     elif action == "update_priority" and title and priority is not None:
+        formatted = format_title(title)
         cursor.execute(
-            "UPDATE tasks SET priority=?, updated=? WHERE title LIKE ?", (priority, now, f"%{title}%")
+            "UPDATE tasks SET priority=?, updated=? WHERE title LIKE ?", (priority, now, f"%{formatted}%")
         )
         conn.commit()
         affected = cursor.rowcount
         if affected > 0:
-            result = {"status": f"Priority of tasks matching '{title}' updated to {priority}.", "updated": now}
+            result = {"status": f"Priority of tasks matching '{formatted}' updated to {priority}.", "updated": now}
         else:
-            result = {"status": f"No tasks matched '{title}' to update priority."}
+            result = {"status": f"No tasks matched '{formatted}' to update priority."}
     elif action == "update_priority_index" and index is not None and priority is not None:
         rows = cursor.execute("SELECT id FROM tasks ORDER BY id").fetchall()
         if 1 <= index <= len(rows):
@@ -315,7 +349,9 @@ async def voice_command(audio: UploadFile):
 
 @app.post("/voice-command/text")
 async def voice_command_text(cmd: dict):
+    print("[DEBUG] Handler called!")
     command_text = cmd.get("command", "")
+    print("[DEBUG] Received:", command_text)
     conn = sqlite3.connect(DB)
     total_tasks = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
     conn.close()

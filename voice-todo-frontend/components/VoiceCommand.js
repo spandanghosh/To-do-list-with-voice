@@ -11,19 +11,19 @@ export default function VoiceCommand({ onSuccess }) {
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000").replace(/\/$/, '');
 
   const handleSend = async () => {
-    setIsSending(true);
-    setResponse(null);
-    try {
-      const res = await axios.post(`${API_BASE}/voice-command/text`, { command: transcript });
-      setResponse(res.data.result);
-      onSuccess(res.data.result);
-      resetTranscript();
-    } catch (err) {
-      setResponse({ status: "error: request failed" });
-    } finally {
-      setIsSending(false);
-    }
-  };
+  setIsSending(true);
+  setResponse(null);
+  try {
+    const res = await axios.post(`${API_BASE}/voice-command/text`, { command: transcript.trim() });
+    setResponse(res.data.result);
+    onSuccess(res.data.result);
+    resetTranscript();
+  } catch (err) {
+    setResponse({ status: "error: request failed" });
+  } finally {
+    setIsSending(false);
+  }
+};
 
   return (
     <div>

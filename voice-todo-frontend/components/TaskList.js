@@ -12,6 +12,7 @@ export default function TaskList({ tasks, onSortChange }) {
   if (!tasks || tasks.length === 0) {
     return <p>No tasks found.</p>;
   }
+
   return (
     <div>
       <div style={{ marginBottom: 10 }}>
@@ -37,27 +38,32 @@ export default function TaskList({ tasks, onSortChange }) {
           {tasks.map((task, i) => (
             <tr key={task.id} className={styles.tr}>
               <td className={styles.td}>{i + 1}</td>
-              <td className={styles.td} style={{ fontWeight: 600 }}>{task.title}</td>
-              <td className={styles.td}>{task.scheduled ? `${task.scheduled}.` : ""}</td>
+              <td className={styles.td} style={{ fontWeight: 600 }}>
+                {task.title ? task.title.charAt(0).toUpperCase() + task.title.slice(1) : ""}
+              </td>
+              <td className={styles.td}>
+                {task.scheduled ? new Date(task.scheduled).toLocaleString() : ""}
+              </td>
               <td className={styles.td}>
                 {typeof task.priority === "number" && (
                   <span style={{
                     backgroundColor: task.priority === 3 ? '#e11d48'
                       : task.priority === 2 ? '#f59e42'
                       : '#38bdf8',
-                    color: '#fff'
+                    color: '#fff',
+                    padding: "3px 8px",
+                    borderRadius: "15px"
                   }}>
-                    {task.priority}.
+                    {task.priority}
                   </span>
                 )}
               </td>
               <td className={styles.td}>
-            {task.created ? new Date(task.created).toLocaleString() : ""}
-            </td>
-            <td className={styles.td}>
-            {task.updated ? new Date(task.updated).toLocaleString() : ""}
-            </td>
-
+                {task.created ? new Date(task.created).toLocaleString() : ""}
+              </td>
+              <td className={styles.td}>
+                {task.updated ? new Date(task.updated).toLocaleString() : ""}
+              </td>
             </tr>
           ))}
         </tbody>
