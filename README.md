@@ -57,13 +57,37 @@ It seamlessly supports creation, deletion, updating, search, and sorting of task
 
 ***
 
+## Important Notes on Render Deployment
+
+- Render can experience occasional downtime or cold start delays.
+- Response times may sometimes take a couple of minutes.
+- Please be patient during those periods or consider pinging the service beforehand to keep it warm.
+- For production or high-availability environments, consider autoscaling or alternative hosting options.
+
+***
+
+## Suggested Voice Prompts
+
+Try using these phrases to get the most out of the app:
+
+- “Add high priority code review for Monday”
+- “Delete the third task”
+- “Show upcoming urgent tasks”
+- “Reschedule team sync to Friday”
+- “Search for tasks about admin”
+- “Sort tasks by priority”
+- “Show me all administrative tasks”
+- “Update add task debug to high priority”
+
+***
+
 ## Key Features
 
-- **Voice and text-based task creation, updating, deletion, listing (CRUD)**
-- **Natural language intent extraction using state-of-the-art LLM**
-- **Scheduling and prioritization via conversational input**
-- **Dynamic search, sorting, and error feedback**
-- **Responsive modular UI with support for real-time status updates**
+- Voice and text-based task creation, updating, deletion, listing (CRUD)
+- Natural language intent extraction using state-of-the-art LLM
+- Scheduling and prioritization via conversational input
+- Dynamic search, sorting, and error feedback
+- Responsive modular UI with support for real-time status updates
 
 ***
 
@@ -79,7 +103,7 @@ It seamlessly supports creation, deletion, updating, search, and sorting of task
 ## Evaluation Checklist
 
 | Capability                  | Ready |
-|-----------------------------|-------|
+|----------------------------|-------|
 | Real-time voice STT         | ✔     |
 | LLM-powered intent parsing  | ✔     |
 | CRUD, scheduling, sorting   | ✔     |
@@ -89,29 +113,17 @@ It seamlessly supports creation, deletion, updating, search, and sorting of task
 
 ***
 
-## Suggested Test Cases
-
-- “Add high priority code review for Monday”
-- “Delete the third task”
-- “Show upcoming urgent tasks”
-- “Reschedule team sync to Friday”
-- “Search for tasks about admin”
-- “Sort tasks by priority”
-
-***
-
 ## Technology Rationale
 
-> Deepgram offers robust, low-latency transcription, simple API usage, and cloud flexibility.
->
+> Deepgram offers robust, low-latency transcription, simple API usage, and cloud flexibility.  
 > HuggingFace phi-2 empowers open-access, instruction-following intent parsing and is ideal for conversational task bots.
 
 ***
 
 ## Notes
 
-- All environment keys are managed securely outside codebase.
-- Endpoint paths and environment variable use documented for easy deploy and maintenance.
+- All environment keys are managed securely outside codebase.  
+- Endpoint paths and environment variable use documented for easy deploy and maintenance.  
 - Please report bugs via issue tracker; design is extensible for further enhancements.
 
 ***
@@ -120,15 +132,9 @@ It seamlessly supports creation, deletion, updating, search, and sorting of task
 
 ***
 
-Want further tweaks, a personalized badge, or extra deployment instructions? Just ask!
+Want further tweaks, personalized badges, or deployment instructions? Just ask!
 
-[1](https://developers.deepgram.com/reference/deepgram-api-overview)
-[2](https://developers.deepgram.com)
-[3](https://deepgram.com/product/speech-to-text)
-[4](https://deepgram.com)
-[5](https://github.com/deepgram/deepgram-python-sdk)
-[6](https://developers.deepgram.com/docs/tts-rest)
-[7](https://developers.deepgram.com/docs/stt/getting-started)
-[8](https://developers.deepgram.com/docs/text-to-speech)
-[9](https://developers.deepgram.com/docs/live-streaming-audio)
-[10](https://developers.deepgram.com/docs/pre-recorded-audio)
+***
+
+**References:**  
+(https://developers.deepgram.com/reference/deepgram-api-overview) (https://developers.deepgram.com) (https://deepgram.com/product/speech-to-text) ...[1][2][3]
