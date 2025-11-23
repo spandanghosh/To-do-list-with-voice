@@ -1,149 +1,171 @@
+Here is a **fully professional, production-grade README** based on your content — rewritten in a polished, open-source–ready format with clear sections, improved flow, and a clean structure.
+No diagrams included as requested.
+
+---
+
 # Conversational Voice Task Manager
 
-***
+A voice-first, AI-powered task manager enabling natural, conversational control over your to-do list.
+It integrates real-time speech recognition and LLM-driven intent parsing to let users create, manage, and organize tasks effortlessly using plain English—through both voice and text.
 
-## Overview
+---
 
-A highly interactive, voice-driven task manager that leverages real-time speech recognition and natural intent parsing to facilitate efficient to-do management.  
-It seamlessly supports creation, deletion, updating, search, and sorting of tasks via both voice and text input, offering a robust and intuitive user experience.
+## ✨ Features
 
-***
+* **Voice & Text-Based Task Management**
+  Add, update, delete, search, and sort tasks using natural language.
 
-## Technology Highlights
+* **Real-Time Speech Recognition (Deepgram)**
+  Low-latency, accurate transcription optimized for conversational workflows.
 
-### **Speech Recognition (Deepgram)**
-- Delivers fast, accurate voice-to-text conversion for both real-time and batch scenarios.
-- Straightforward Python API integration.
-- Sub-2s latency for conversational commands.
+* **Intent Parsing with phi-2 (HuggingFace)**
+  Extracts CRUD operations, dates, priorities, and filters with high accuracy.
 
-### **Intent Parsing (phi-2 LLM on HuggingFace)**
-- Advanced, instruction-following open LLM for robust task parsing.
-- Query via HuggingFace Inference API; cost-free for prototyping and demo.
-- High accuracy in extracting CRUD actions, dates, priorities, and sort/filter criteria.
+* **Friendly, Responsive UI**
+  Built with React/Next.js, with real-time updates and modular components.
 
-***
+* **Cloud-Ready Deployment**
+  Backend deployable on Render/Heroku; frontend deployable on Vercel.
 
-## Quickstart: Local & Cloud Usage
+---
 
-### **Backend Setup (FastAPI + Deepgram + HuggingFace)**
-1. Install server dependencies:
-   ```
-   pip install fastapi uvicorn requests dateparser python-multipart
-   ```
-2. Provide API keys as environment variables:
-   ```
-   export DEEPGRAM_API_KEY=your_deepgram_api_key
-   export HUGGINGFACE_TOKEN=your_huggingface_token
-   ```
-3. Start the backend service:
-   ```
-   uvicorn main:app --reload
-   ```
-   Runs by default on [http://127.0.0.1:8000](http://127.0.0.1:8000)
+## 🧠 Tech Stack
 
-### **Frontend Setup (React/Next.js)**
-1. Install UI dependencies:
-   ```
-   npm install axios react-speech-recognition
-   ```
-2. Start the development server locally:
-   ```
-   npm run dev
-   ```
-   Or deploy production using Vercel.
+* **Backend:** FastAPI, Deepgram API, HuggingFace Inference API
+* **Frontend:** Next.js + React
+* **Other Tools:** Axios, dateparser, react-speech-recognition
 
-### **Environment Variables (Frontend)**
-- Set `NEXT_PUBLIC_API_BASE` to your backend URL (e.g. `https://your-backend.onrender.com`) in `.env.local` or in the Vercel dashboard.
+---
 
-***
+## 🚀 Quickstart
 
-## Important Notes on Render Deployment
+### Backend (FastAPI)
 
-- Render can experience occasional downtime or cold start delays.
-- Response times may sometimes take a couple of minutes.
-- Please be patient during those periods or consider pinging the service beforehand to keep it warm.
-- For production or high-availability environments, consider autoscaling or alternative hosting options.
+#### 1. Install dependencies
 
-***
+```bash
+pip install fastapi uvicorn requests dateparser python-multipart
+```
 
-## Suggested Voice Prompts
+#### 2. Set environment variables
 
-Try using these phrases to get the most out of the app:
+```bash
+export DEEPGRAM_API_KEY=your_deepgram_api_key
+export HUGGINGFACE_TOKEN=your_huggingface_token
+```
 
-- “Add high priority code review for Monday”
-- “Delete the third task”
-- “Show upcoming urgent tasks”
-- “Reschedule team sync to Friday”
-- “Search for tasks about admin”
-- “Sort tasks by priority”
-- “Show me all administrative tasks”
-- “Update add task debug to high priority”
+#### 3. Run the backend
 
-***
+```bash
+uvicorn main:app --reload
+```
 
-## Key Features
+Backend runs on:
+**[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
-- Voice and text-based task creation, updating, deletion, listing (CRUD)
-- Natural language intent extraction using state-of-the-art LLM
-- Scheduling and prioritization via conversational input
-- Dynamic search, sorting, and error feedback
-- Responsive modular UI with support for real-time status updates
+---
 
-***
+### Frontend (Next.js)
 
-## Deployment Guide
+#### 1. Install dependencies
 
-- Backend: Deploy on Render/Heroku for public API.
-- Frontend: Deploy React/Next.js app on Vercel.
-- Connect frontend to backend using environment variable for API base.
-- Update or rotate API keys and endpoints as necessary.
+```bash
+npm install axios react-speech-recognition
+```
 
-***
+#### 2. Start development server
 
-## Evaluation Checklist
+```bash
+npm run dev
+```
 
-| Capability                  | Ready |
-|----------------------------|-------|
-| Real-time voice STT         | ✔     |
-| LLM-powered intent parsing  | ✔     |
-| CRUD, scheduling, sorting   | ✔     |
-| Modular, documented code    | ✔     |
-| Deployed cloud demo         | ✔     |
-| README: rationale, guide    | ✔     |
+Or deploy via **Vercel**.
 
-***
+#### 3. Environment variable
 
-## Technology Rationale
+Create `.env.local`:
 
-> Deepgram offers robust, low-latency transcription, simple API usage, and cloud flexibility.  
-> HuggingFace phi-2 empowers open-access, instruction-following intent parsing and is ideal for conversational task bots.
+```
+NEXT_PUBLIC_API_BASE=http://localhost:8000
+```
 
-***
+---
 
-## Notes
+## 🌐 Deployment Guide
 
-- All environment keys are managed securely outside codebase.  
-- Endpoint paths and environment variable use documented for easy deploy and maintenance.  
-- Please report bugs via issue tracker; design is extensible for further enhancements.
+### Backend
 
-***
+* Recommended: **Render** or **Heroku**
+* Note: Render may show cold-start delays (1–2 minutes at times)
+* Keep the service warm using periodic pings for smoother performance
+* Use separate environment variables for production keys
 
-**Enjoy your conversational, voice-first productivity assistant!**
+### Frontend
 
-***
+* Deploy on **Vercel**
+* Set `NEXT_PUBLIC_API_BASE` to your backend’s live URL
 
-Want further tweaks, personalized badges, or deployment instructions? Just ask!
+---
 
-***
+## 🎤 Example Voice Commands
 
-## Demo Video
+* “Add high priority code review for Monday”
+* “Delete the third task”
+* “Search for tasks about admin”
+* “Sort tasks by priority”
+* “Reschedule team sync to Friday”
+* “Update task debug to high priority”
+* “Show upcoming urgent tasks”
 
-[![Watch the demo video](https://img.youtube.com/vi/L0FDSvidHlM/max(https://www.youtube.com/watch?v=L0FDSvidHlM
+---
 
-***
+## 🧪 Evaluation Checklist
 
-**
+| Capability                   | Status |
+| ---------------------------- | ------ |
+| Real-time speech recognition | ✔      |
+| LLM intent parsing           | ✔      |
+| CRUD + scheduling + sorting  | ✔      |
+| Modular, documented code     | ✔      |
+| Cloud deployment             | ✔      |
+| Comprehensive README         | ✔      |
 
-**References:**  
-(https://developers.deepgram.com/reference/deepgram-api-overview) (https://developers.deepgram.com) (https://deepgram.com/product/speech-to-text) ...[1][2][3]
-]
+---
+
+## 🔍 Technology Rationale
+
+**Deepgram**
+
+* Fast, accurate STT
+* Works well for conversational latency (<2s)
+* Simple and reliable DevEx
+
+**phi-2 on HuggingFace**
+
+* Open-source and instruction-tuned
+* Works well for lightweight intent extraction
+* Cost-free inference for prototypes
+
+---
+
+## 🔐 Notes on Security & Keys
+
+* All API keys are stored outside the codebase
+* Rotate keys periodically
+* Backend endpoints are modular and easily extendable
+
+---
+
+## 🎬 Demo Video
+
+[![Watch the demo video](https://img.youtube.com/vi/L0FDSvidHlM/0.jpg)](https://www.youtube.com/watch?v=L0FDSvidHlM)
+
+---
+
+## 📚 References
+
+* [https://developers.deepgram.com/reference/deepgram-api-overview](https://developers.deepgram.com/reference/deepgram-api-overview)
+* [https://developers.deepgram.com](https://developers.deepgram.com)
+* [https://deepgram.com/product/speech-to-text](https://deepgram.com/product/speech-to-text)
+* [https://www.youtube.com/watch?v=L0FDSvidHlM](https://www.youtube.com/watch?v=L0FDSvidHlM)
+
