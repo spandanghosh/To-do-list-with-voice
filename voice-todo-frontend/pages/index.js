@@ -38,20 +38,25 @@ export default function HomePage() {
   }, [sort]);
 
   const handleCommandResult = (result) => {
-    if (Array.isArray(result)) {
-      setTasks(result);
-      setError(result.length === 0 ? "No tasks match your query." : "");
-    } else if (result && result.status) {
-      fetchTasks(search, sort);
-      if (result.status === "unknown command or missing info") {
-        setError("Could not understand command. Try rephrasing or be more specific.");
-      } else {
-        setError("");
-      }
-    } else {
-      fetchTasks(search, sort);
+  if (Array.isArray(result)) {
+    setTasks(result);
+    setError(result.length === 0 ? "No tasks match your query." : "");
+    // Set search input to filter term when showing tasks from command
+    if (result.length > 0 && result[0].title) {
+      setSearch(result[0].title);
     }
-  };
+  } else if (result && result.status) {
+    fetchTasks(search, sort);
+    if (result.status === "unknown command or missing info") {
+      setError("Could not understand command. Try rephrasing or be more specific.");
+    } else {
+      setError("");
+    }
+  } else {
+    fetchTasks(search, sort);
+  }
+};
+
 
   return (
     <div className={styles.main}>

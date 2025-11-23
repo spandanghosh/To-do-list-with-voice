@@ -264,11 +264,14 @@ def handle_task_command(command: dict):
         result = {"status": "Task created.", "title": formatted, "scheduled": scheduled, "priority": priority, "created": now}
     elif action == "show":
         rows = cursor.execute("SELECT * FROM tasks").fetchall()
+        STOP_WORDS = {"task", "tasks", "all", "my"}
         if title:
-            formatted = format_title(title)
+            formatted = format_title(title).lower()
+            keywords = [k for k in formatted.split() if k not in STOP_WORDS]
             filtered = [
-                {"id": r[0], "title": r[1], "scheduled": r[2], "priority": r[3], "created": r[4], "updated": r[5]}
-                for r in rows if formatted in r[1].lower()
+                task for r in rows for task in [{
+                    "id": r[0], "title": r[1], "scheduled": r[2], "priority": r[3], "created": r[4], "updated": r[5]
+                }] if all(k in task["title"].lower() for k in keywords)
             ]
         else:
             filtered = [
